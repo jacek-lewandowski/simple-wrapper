@@ -2,13 +2,15 @@
 #include <unistd.h>
 #include <ns_utils.h>
 #include <sys/mount.h>
-
+#include <stdlib.h>
 #include "utils.h"
 
 int run_application()
 {
+    setuid(1);
     system("id");
     system("ps aux");
+    sleep(300);
     return 0;
 }
 
