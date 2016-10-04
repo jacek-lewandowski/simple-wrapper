@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <unistd.h>
+#include <errno.h>
 #include <err.h>
 #include <wait.h>
 #include <stdarg.h>

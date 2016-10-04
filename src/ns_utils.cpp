@@ -1,6 +1,8 @@
 #include <utils.h>
 #include <iostream>
 #include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <sys/mount.h>
 #include <cstring>
 #include <grp.h>
