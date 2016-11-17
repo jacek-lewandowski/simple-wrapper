@@ -4,13 +4,14 @@
 #include <sys/mount.h>
 
 #include "utils.h"
+#include "commands.h"
 
-int run_application()
+struct ChildArg
 {
-    system("id");
-    system("ps aux");
-    return 0;
-}
+    int *pipe_from_parent;
+    char **argv;
+    int argc;
+};
 
 int mount_filesystems()
 {
@@ -25,7 +26,9 @@ int mount_filesystems()
 
 static int child_process(void *arg)
 {
-    int *from_parent = (int *) arg;
+    ChildArg *child_arg = (ChildArg *) arg;
+
+    int *from_parent = child_arg->pipe_from_parent;
 
     // we don't need those endpoints in the child process
     close_output(from_parent);
@@ -42,7 +45,7 @@ static int child_process(void *arg)
     close_input(from_parent);
 
     // now, assuming the setup phase passed, we can run the wrapped app
-    return ret || run_application();
+    return ret || run_command(child_arg->argc, child_arg->argv);
 }
 
 int main(int argc, char *argv[])
@@ -59,8 +62,12 @@ int main(int argc, char *argv[])
     size_t stack_size = (size_t) sysconf(_SC_PAGESIZE);
     void *stack = alloca(stack_size);
 
+    ChildArg child_arg;
+    child_arg.pipe_from_parent = to_child;
+    child_arg.argc = argc - 1;
+    child_arg.argv = &argv[1];
     int flags = CLONE_NEWUSER | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWIPC;
-    int pid = clone(child_process, stack + stack_size, flags, &to_child);
+    int pid = clone(child_process, stack + stack_size, flags, &child_arg);
     if (pid > 0)
     {
         // we don't need this endpoint in the parent process
